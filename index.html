@@ -125,7 +125,7 @@
             { id: 2, name: "Main Entrance", type: "Lock", status: "Locked", icon: Lock, active: true, image: "https://images.unsplash.com/photo-1516455590571-18256e5bb9ff?auto=format&fit=crop&w=800&q=80" },
             { id: 3, name: "Master Suite", type: "Climate", status: "22°C", icon: ThermometerSun, active: true, image: "https://images.unsplash.com/photo-1616594039964-408e4080ce37?auto=format&fit=crop&w=800&q=80" },
             { id: 4, name: "Garden", type: "Irrigation", status: "Scheduled", icon: Droplet, active: false, image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80" },
-            { id: 5, name: "Media Center", type: "Audio", status: "Standby", icon: Music, active: false, image: "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=800&q=80" },
+            { id: 5, name: "Media Center", type: "Audio", status: "Standby", icon: Music, active: false, image: "https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=800&q=80" },
             { id: 6, name: "Smart Grid", type: "Power", status: "Optimal", icon: Zap, active: true, image: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=800&q=80" },
         ];
 
@@ -153,6 +153,36 @@
                 <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#D4AF37]/10 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
                 )}
                 <div className="relative z-10 h-full">{children}</div>
+            </div>
+        );
+
+        // Enhanced Visual Action Tile
+        const VisualActionTile = ({ icon: Icon, label, status, color, bgImage, active }) => (
+            <div className="relative overflow-hidden rounded-[1.8rem] h-32 flex flex-col justify-between p-5 group cursor-pointer border border-white/5 hover:border-[#D4AF37]/50 transition-all shadow-lg">
+                {/* Background Image/Gradient */}
+                <div className="absolute inset-0 bg-[#1c1c1e]">
+                    <img 
+                        src={bgImage} 
+                        className="w-full h-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-700 mix-blend-overlay" 
+                        alt={label}
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${color} to-transparent opacity-80`} />
+                </div>
+                
+                <div className="relative z-10 flex justify-between items-start">
+                    <div className={`
+                        w-9 h-9 rounded-full flex items-center justify-center border border-white/20 backdrop-blur-md
+                        ${active ? 'bg-[#D4AF37] text-black' : 'bg-black/30 text-white'}
+                    `}>
+                        <Icon size={16} />
+                    </div>
+                    {active && <div className="w-2 h-2 rounded-full bg-[#30D158] shadow-[0_0_8px_#30D158]" />}
+                </div>
+                
+                <div className="relative z-10">
+                    <p className="text-[11px] font-medium text-white/70 uppercase tracking-wider">{label}</p>
+                    <p className="text-lg font-semibold text-white tracking-tight">{status}</p>
+                </div>
             </div>
         );
 
@@ -214,35 +244,35 @@
                 {/* Bento Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
-                {/* Main Status Card */}
-                <AppleCard className="md:col-span-2 min-h-[280px] flex flex-col justify-between" highlight>
-                    <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md">
-                        <Home size={20} className="text-white" />
+                {/* Main Status Card - Enhanced Visual */}
+                <AppleCard className="md:col-span-2 min-h-[280px] flex flex-col justify-between relative group" highlight>
+                    <div className="flex justify-between items-start relative z-10">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10">
+                            <Home size={20} className="text-white" />
+                            </div>
+                            <div>
+                            <h3 className="text-lg font-semibold text-white">Residence 4B</h3>
+                            <p className="text-sm text-[#86868b]">Estate Collection</p>
+                            </div>
                         </div>
-                        <div>
-                        <h3 className="text-lg font-semibold text-white">Residence 4B</h3>
-                        <p className="text-sm text-[#86868b]">Estate Collection</p>
+                        <div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                            <span className="text-xs font-medium text-[#D4AF37] flex items-center gap-2">
+                                <Thermometer size={14} /> 22°C • Comfortable
+                            </span>
                         </div>
-                    </div>
-                    <div className="bg-white/5 backdrop-blur-md px-3 py-1 rounded-full border border-white/5">
-                        <span className="text-xs font-medium text-[#D4AF37] flex items-center gap-2">
-                            <Thermometer size={14} /> 22°C • Comfortable
-                        </span>
-                    </div>
                     </div>
 
-                    <div className="mt-8">
-                    <div className="flex items-end gap-2 mb-2">
-                        <span className="text-5xl font-light text-white">Rp 4.25B</span>
-                        <span className="text-sm text-[#D4AF37] mb-2 font-medium flex items-center gap-1 bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg border border-[#D4AF37]/20">
-                        <TrendingUp size={12} /> +12%
-                        </span>
-                    </div>
-                    <p className="text-sm text-[#86868b] max-w-md leading-relaxed">
-                        Your home value is trending upward. Recent "Smart Grid" upgrades have increased your asset score by 4 points.
-                    </p>
+                    <div className="mt-8 relative z-10">
+                        <div className="flex items-end gap-2 mb-2">
+                            <span className="text-5xl font-light text-white">Rp 4.25B</span>
+                            <span className="text-sm text-[#D4AF37] mb-2 font-medium flex items-center gap-1 bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg border border-[#D4AF37]/20">
+                            <TrendingUp size={12} /> +12%
+                            </span>
+                        </div>
+                        <p className="text-sm text-[#ccc] max-w-md leading-relaxed font-light">
+                            Your home value is trending upward. Recent "Smart Grid" upgrades have increased your asset score by 4 points.
+                        </p>
                     </div>
                 </AppleCard>
 
@@ -270,18 +300,41 @@
                     </button>
                 </AppleCard>
 
-                {/* Quick Actions Row */}
-                <AppleCard className="md:col-span-3 flex justify-around items-center py-8 bg-gradient-to-r from-[#1c1c1e] to-[#161618]">
-                    {[
-                    { icon: Zap, label: "Lighting" },
-                    { icon: Wind, label: "Climate" },
-                    { icon: Shield, label: "Security" },
-                    { icon: Music, label: "Media" },
-                    { icon: Wifi, label: "Network" },
-                    ].map((action, i) => (
-                    <IconButton key={i} icon={action.icon} label={action.label} active={i === 0} />
-                    ))}
-                </AppleCard>
+                {/* Quick Actions Grid - Replaced Row with Visual Tiles */}
+                <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <VisualActionTile 
+                        icon={Zap} 
+                        label="Lighting" 
+                        status="Evening Mood" 
+                        color="from-amber-900/80" 
+                        bgImage="https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?auto=format&fit=crop&w=400&q=80"
+                        active={true}
+                    />
+                    <VisualActionTile 
+                        icon={Wind} 
+                        label="Climate" 
+                        status="22°C • Cool" 
+                        color="from-sky-900/80" 
+                        bgImage="https://images.unsplash.com/photo-1631049552057-403cdb8f0658?auto=format&fit=crop&w=400&q=80"
+                        active={true}
+                    />
+                    <VisualActionTile 
+                        icon={Shield} 
+                        label="Security" 
+                        status="Armed" 
+                        color="from-emerald-900/80" 
+                        bgImage="https://images.unsplash.com/photo-1558036117-15d82a90b9b1?auto=format&fit=crop&w=400&q=80"
+                        active={true}
+                    />
+                    <VisualActionTile 
+                        icon={Music} 
+                        label="Media" 
+                        status="Paused" 
+                        color="from-purple-900/80" 
+                        bgImage="https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=400&q=80"
+                        active={false}
+                    />
+                </div>
                 
                 {/* Maintenance / Value Engine */}
                 <AppleCard className="flex flex-col">
@@ -410,35 +463,60 @@
                 </AppleCard>
 
                 {/* Quick Climate */}
-                <AppleCard className="flex flex-col justify-between relative overflow-hidden">
+                <AppleCard className="flex flex-col justify-between relative overflow-hidden group">
                     {/* Visual: Abstract Climate Background */}
                     <img 
-                        src="https://images.unsplash.com/photo-1631049552057-403cdb8f0658?auto=format&fit=crop&w=800&q=80" 
-                        className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay"
-                        alt="Air Quality"
+                        src="https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=800&q=80" 
+                        className="absolute inset-0 w-full h-full object-cover object-bottom opacity-30 group-hover:scale-105 transition-transform duration-1000"
+                        alt="Atmosphere"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#1c1c1e]/80 via-[#1c1c1e]/90 to-[#1c1c1e]" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#1c1c1e]/80 to-[#1c1c1e]" />
 
                     <div className="flex justify-between items-start relative z-10">
-                        <div className="flex items-center gap-2 text-[#D4AF37]">
-                        <ThermometerSun size={20} />
-                        <span className="text-sm font-medium">Climate</span>
+                        <div className="flex items-center gap-3 text-[#D4AF37]">
+                            <div className="p-2 bg-[#D4AF37]/10 rounded-full backdrop-blur-md border border-[#D4AF37]/20">
+                                <ThermometerSun size={18} />
+                            </div>
+                            <div>
+                                <span className="text-sm font-medium block leading-none text-white">Predictive Climate</span>
+                                <span className="text-[10px] text-[#D4AF37] font-medium tracking-wide flex items-center gap-1 mt-1">
+                                    <Sparkles size={8} /> Optimizing for 21:00
+                                </span>
+                            </div>
                         </div>
-                        <span className="text-2xl font-light text-white">22°</span>
+                        <div className="text-right">
+                            <span className="text-2xl font-light text-white block leading-none">22°</span>
+                            <span className="text-[10px] text-[#30D158] font-medium bg-[#30D158]/10 px-2 py-0.5 rounded-full mt-1">Eco On</span>
+                        </div>
                     </div>
                     
-                    <div className="space-y-6 relative z-10">
-                        <div className="flex justify-between text-xs text-[#86868b]">
-                        <span>Indoor: 22°C</span>
-                        <span>Humidity: 45%</span>
+                    <div className="space-y-4 relative z-10 mt-4">
+                        <div className="flex justify-between text-xs text-[#86868b] font-medium">
+                            <span>Indoor: 22°C</span>
+                            <span>Target: 20°C</span>
                         </div>
-                        <div className="relative h-48 w-full flex items-end gap-1">
-                        {/* Decorative bar chart */}
-                        {[40, 60, 45, 70, 50, 60, 80].map((h, i) => (
-                            <div key={i} className="flex-1 bg-[#2c2c2e] rounded-t-sm relative overflow-hidden group">
-                                <div className="absolute bottom-0 left-0 right-0 bg-[#D4AF37]/50 h-full transition-all group-hover:bg-[#D4AF37]" style={{ height: `${h}%` }} />
-                            </div>
-                        ))}
+                        
+                        {/* Predictive Curve Visualization */}
+                        <div className="relative h-32 w-full flex items-end gap-1">
+                            {[30, 45, 40, 60, 75, 50, 40, 30].map((h, i) => (
+                                <div key={i} className="flex-1 bg-[#2c2c2e]/50 rounded-t-sm relative overflow-hidden group/bar">
+                                    <div 
+                                        className={`absolute bottom-0 left-0 right-0 transition-all duration-1000 rounded-t-sm ${i > 4 ? 'bg-gradient-to-t from-[#D4AF37]/50 to-[#D4AF37] opacity-80' : 'bg-[#86868b] opacity-20'}`} 
+                                        style={{ height: `${h}%` }} 
+                                    />
+                                    {i === 5 && (
+                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -mt-6 flex flex-col items-center animate-bounce">
+                                            <span className="text-[8px] text-[#D4AF37] mb-0.5">Peak</span>
+                                            <div className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full shadow-[0_0_10px_#D4AF37]" />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex justify-between text-[9px] uppercase tracking-widest text-[#86868b]">
+                            <span>Now</span>
+                            <span className="text-[#D4AF37]">Predicted</span>
+                            <span>4h</span>
                         </div>
                     </div>
                 </AppleCard>
