@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECHA Hub Living OS</title>
+    
+    <!-- Fonts: Playfair Display (Serif) and Inter (Sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS (JIT Mode) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    animation: {
+                        fadeIn: 'fadeIn 0.5s ease-out',
+                        blob: 'blob 7s infinite',
+                        'spin-slow': 'spin 3s linear infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Custom Scrollbar Styles -->
+    <style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .scrollbar-hide {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        
+        body {
+            background-color: #050505;
+            color: #F5F5F7;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- Main Application Script -->
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
+        import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+        
+        // Import Lucide Icons from ESM
+        import { 
+            Home, Hammer, Zap, Sparkles, Settings, Bell, Search, TrendingUp, 
+            ArrowUpRight, CheckCircle2, Wind, Droplet, Sun, Moon, Music, 
+            Shield, ChevronRight, Activity, Heart, Calendar, Leaf, Thermometer, 
+            Wifi, Smartphone, Menu, X, Play, Share2, Cpu, Lock, User, LogOut, 
+            ToggleRight, Eye, LayoutGrid, Power, Video, Mic, Unlock, ThermometerSun 
+        } from 'https://esm.sh/lucide-react@0.292.0';
+
+        // --- Apple-Style Luxury Theme Constants ---
+        const THEME = {
+            bg: "bg-[#050505]", // True Black (OLED style)
+            card: "bg-[#1c1c1e]/60 backdrop-blur-2xl border border-[#D4AF37]/10 shadow-2xl",
+            cardHover: "hover:bg-[#2c2c2e]/80 transition-all duration-500 ease-out",
+            active: "bg-[#D4AF37] text-black shadow-[0_0_25px_rgba(212,175,55,0.4)]", // Gold Active State
+            textPrimary: "text-[#F5F5F7]",
+            textSecondary: "text-[#86868b]",
+            accent: "text-[#D4AF37]", // Metallic Gold
+            success: "text-[#30D158]",
+            warning: "text-[#FFD60A]",
+            danger: "text-[#FF453A]",
+            radius: "rounded-[2rem]", 
+        };
+
+        // --- Mock Data ---
+        const HOME_HEALTH_METRICS = [
+            { id: 'structure', label: 'Structural', value: 98, status: 'Healthy', color: THEME.success },
+            { id: 'systems', label: 'Systems', value: 100, status: 'Optimal', color: THEME.accent },
+            { id: 'climate', label: 'Air Quality', value: 94, status: 'Good', color: THEME.success },
+        ];
+
+        const INSIGHTS = [
+            { id: 1, title: "Rain Mode Active", desc: "Windows sealed.", icon: Droplet, time: "Now" },
+            { id: 2, title: "Energy Saved", desc: "12% this week.", icon: Leaf, time: "2h ago" },
+        ];
+
+        const MAINTENANCE_QUEUE = [
+            { id: 1, title: "HVAC Filter", due: "In 3 days", impact: "+ Value", type: "Routine" },
+            { id: 2, title: "Gutter Cleaning", due: "Next Week", impact: "Preventative", type: "Seasonal" },
+        ];
+
+        const SYSTEM_STATUS = [
+            { id: 'hvac', name: 'HVAC', status: 'Optimal', load: '34%', temp: '22°C' },
+            { id: 'water', name: 'Water Filtration', status: 'Good', load: '65%', temp: '18°C' },
+            { id: 'elec', name: 'Main Grid', status: 'Optimal', load: '12%', temp: '45°C' },
+        ];
+
+        const HUB_DEVICES = [
+            { id: 1, name: "Living Room", type: "Light", status: "60%", icon: Sun, active: true, image: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=800&q=80" },
+            { id: 2, name: "Main Entrance", type: "Lock", status: "Locked", icon: Lock, active: true, image: "https://images.unsplash.com/photo-1516455590571-18256e5bb9ff?auto=format&fit=crop&w=800&q=80" },
+            { id: 3, name: "Master Suite", type: "Climate", status: "22°C", icon: ThermometerSun, active: true, image: "https://images.unsplash.com/photo-1616594039964-408e4080ce37?auto=format&fit=crop&w=800&q=80" },
+            { id: 4, name: "Garden", type: "Irrigation", status: "Scheduled", icon: Droplet, active: false, image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80" },
+            { id: 5, name: "Media Center", type: "Audio", status: "Standby", icon: Music, active: false, image: "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=800&q=80" },
+            { id: 6, name: "Smart Grid", type: "Power", status: "Optimal", icon: Zap, active: true, image: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=800&q=80" },
+        ];
+
+        const SCENES = [
+            { id: 'morning', label: 'Morning Rise', icon: Sun },
+            { id: 'evening', label: 'Evening Chill', icon: Moon },
+            { id: 'party', label: 'Entertain', icon: Music },
+            { id: 'away', label: 'Sentry Mode', icon: Shield },
+        ];
+
+        // --- Components ---
+
+        const AppleCard = ({ children, className = "", onClick, noPadding = false, highlight = false }) => (
+            <div 
+                onClick={onClick}
+                className={`
+                ${THEME.card} ${THEME.radius} 
+                ${noPadding ? '' : 'p-6'} 
+                ${onClick ? 'cursor-pointer group hover:scale-[1.01]' : ''}
+                ${className}
+                relative overflow-hidden
+                `}
+            >
+                {highlight && (
+                <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#D4AF37]/10 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
+                )}
+                <div className="relative z-10 h-full">{children}</div>
+            </div>
+        );
+
+        const IconButton = ({ icon: Icon, active, onClick, label }) => (
+            <button 
+                onClick={onClick}
+                className={`
+                flex flex-col items-center gap-2 transition-all duration-300 group
+                ${active ? 'text-[#D4AF37]' : 'text-[#86868b] hover:text-[#F5F5F7]'}
+                `}
+            >
+                <div className={`
+                w-12 h-12 flex items-center justify-center rounded-full transition-all duration-300
+                ${active ? 'bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20 scale-110' : 'bg-[#2c2c2e] group-hover:bg-[#3a3a3c]'}
+                `}>
+                <Icon size={20} strokeWidth={2} />
+                </div>
+                <span className="text-[10px] font-medium tracking-wide">{label}</span>
+            </button>
+        );
+
+        const MetricRing = ({ value, label, color }) => (
+            <div className="flex flex-col items-center gap-2">
+                <div className="relative w-16 h-16 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90">
+                    <circle cx="32" cy="32" r="28" stroke="#2c2c2e" strokeWidth="4" fill="transparent" />
+                    <circle 
+                    cx="32" cy="32" r="28" 
+                    stroke="currentColor" 
+                    strokeWidth="4" 
+                    fill="transparent" 
+                    strokeDasharray="175.9" 
+                    strokeDashoffset={175.9 - (175.9 * value) / 100} 
+                    className={`transition-all duration-1000 ease-out ${color}`}
+                    />
+                </svg>
+                <span className="absolute text-sm font-semibold text-white">{value}%</span>
+                </div>
+                <span className="text-xs text-[#86868b] text-center w-20 leading-tight">{label}</span>
+            </div>
+        );
+
+        // --- Views ---
+
+        const HomeView = () => (
+            <div className="space-y-6 animate-fadeIn pb-24">
+                {/* Greeting Header */}
+                <div className="flex justify-between items-end px-2">
+                <div>
+                    <h2 className="text-sm font-medium text-[#D4AF37] uppercase tracking-wider mb-1">Wednesday, Oct 24</h2>
+                    <h1 className="text-4xl font-semibold text-white tracking-tight">Good Evening, Josephine.</h1>
+                </div>
+                <div className="flex items-center gap-3 bg-[#1c1c1e] px-4 py-2 rounded-full border border-white/5">
+                    <div className="w-2 h-2 rounded-full bg-[#30D158] animate-pulse" />
+                    <span className="text-sm text-[#86868b]">System Healthy</span>
+                </div>
+                </div>
+
+                {/* Bento Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                {/* Main Status Card */}
+                <AppleCard className="md:col-span-2 min-h-[280px] flex flex-col justify-between" highlight>
+                    <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md">
+                        <Home size={20} className="text-white" />
+                        </div>
+                        <div>
+                        <h3 className="text-lg font-semibold text-white">Residence 4B</h3>
+                        <p className="text-sm text-[#86868b]">Estate Collection</p>
+                        </div>
+                    </div>
+                    <div className="bg-white/5 backdrop-blur-md px-3 py-1 rounded-full border border-white/5">
+                        <span className="text-xs font-medium text-[#D4AF37] flex items-center gap-2">
+                            <Thermometer size={14} /> 22°C • Comfortable
+                        </span>
+                    </div>
+                    </div>
+
+                    <div className="mt-8">
+                    <div className="flex items-end gap-2 mb-2">
+                        <span className="text-5xl font-light text-white">Rp 4.25B</span>
+                        <span className="text-sm text-[#D4AF37] mb-2 font-medium flex items-center gap-1 bg-[#D4AF37]/10 px-2 py-0.5 rounded-lg border border-[#D4AF37]/20">
+                        <TrendingUp size={12} /> +12%
+                        </span>
+                    </div>
+                    <p className="text-sm text-[#86868b] max-w-md leading-relaxed">
+                        Your home value is trending upward. Recent "Smart Grid" upgrades have increased your asset score by 4 points.
+                    </p>
+                    </div>
+                </AppleCard>
+
+                {/* Living Pulse (Activity) */}
+                <AppleCard className="flex flex-col justify-between">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Activity size={20} className="text-[#D4AF37]" />
+                        <h3 className="text-base font-semibold text-white">Living Pulse</h3>
+                    </div>
+                    <div className="space-y-4">
+                    {INSIGHTS.map((item) => (
+                        <div key={item.id} className="flex gap-3 items-center group cursor-pointer">
+                        <div className="w-10 h-10 rounded-2xl bg-[#2c2c2e] flex items-center justify-center group-hover:bg-[#3a3a3c] transition-colors border border-white/5 group-hover:border-[#D4AF37]/30">
+                            <item.icon size={18} className="text-[#D4AF37]" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-white">{item.title}</p>
+                            <p className="text-xs text-[#86868b]">{item.time}</p>
+                        </div>
+                        </div>
+                    ))}
+                    </div>
+                    <button className="w-full mt-4 py-3 bg-[#2c2c2e] rounded-xl text-xs font-medium text-white hover:bg-[#3a3a3c] transition-colors border border-white/5">
+                    View All Activity
+                    </button>
+                </AppleCard>
+
+                {/* Quick Actions Row */}
+                <AppleCard className="md:col-span-3 flex justify-around items-center py-8 bg-gradient-to-r from-[#1c1c1e] to-[#161618]">
+                    {[
+                    { icon: Zap, label: "Lighting" },
+                    { icon: Wind, label: "Climate" },
+                    { icon: Shield, label: "Security" },
+                    { icon: Music, label: "Media" },
+                    { icon: Wifi, label: "Network" },
+                    ].map((action, i) => (
+                    <IconButton key={i} icon={action.icon} label={action.label} active={i === 0} />
+                    ))}
+                </AppleCard>
+                
+                {/* Maintenance / Value Engine */}
+                <AppleCard className="flex flex-col">
+                    <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-semibold text-white">Home Health</h3>
+                    <Heart size={18} className="text-[#FF375F]" />
+                    </div>
+                    <div className="flex justify-between px-2">
+                    {HOME_HEALTH_METRICS.map((m) => (
+                        <MetricRing key={m.id} {...m} />
+                    ))}
+                    </div>
+                </AppleCard>
+
+                {/* Upkeep Queue */}
+                <AppleCard className="md:col-span-2">
+                    <div className="flex justify-between items-center mb-6">
+                    <h3 className="font-semibold text-white">Maintenance Schedule</h3>
+                    <button className="text-xs text-[#D4AF37] font-medium hover:underline">See Full Calendar</button>
+                    </div>
+                    <div className="space-y-3">
+                    {MAINTENANCE_QUEUE.map((task) => (
+                        <div key={task.id} className="flex items-center justify-between p-3 rounded-xl bg-[#2c2c2e]/50 border border-white/5 hover:bg-[#2c2c2e] transition-colors cursor-pointer group">
+                        <div className="flex items-center gap-4">
+                            <div className={`w-2 h-2 rounded-full ${task.type === 'Routine' ? 'bg-[#FFD60A]' : 'bg-[#30D158]'}`} />
+                            <div>
+                            <p className="text-sm font-medium text-white group-hover:text-[#D4AF37] transition-colors">{task.title}</p>
+                            <p className="text-xs text-[#86868b]">Due: {task.due}</p>
+                            </div>
+                        </div>
+                        <span className="text-[10px] font-semibold bg-[#30D158]/10 text-[#30D158] px-2 py-1 rounded-md border border-[#30D158]/20">
+                            {task.impact}
+                        </span>
+                        </div>
+                    ))}
+                    </div>
+                </AppleCard>
+                </div>
+            </div>
+        );
+
+        const HubView = () => (
+            <div className="space-y-6 animate-fadeIn pb-24">
+                <div className="flex justify-between items-end px-2">
+                <div>
+                    <h2 className="text-sm font-medium text-[#D4AF37] uppercase tracking-wider mb-1">Command Center</h2>
+                    <h1 className="text-3xl font-semibold text-white">Living Hub</h1>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
+                    <span className="text-xs text-[#86868b]">12 Active Devices</span>
+                </div>
+                </div>
+
+                {/* Hub Spatial Visual */}
+                <div className="relative h-56 w-full rounded-[2rem] overflow-hidden border border-white/5 bg-[#1c1c1e]/40 flex items-center justify-center group">
+                {/* Base Grid */}
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] perspective-[500px]" />
+                
+                {/* Central Pulse */}
+                <div className="absolute w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-3xl animate-pulse" />
+                
+                {/* Central Node */}
+                <div className="relative z-10 flex flex-col items-center gap-3">
+                    <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#1c1c1e] to-[#000] border border-[#D4AF37]/30 flex items-center justify-center shadow-[0_0_40px_rgba(212,175,55,0.15)] relative">
+                        <Cpu size={24} className="text-[#D4AF37]" />
+                        {/* Satellite Orbs */}
+                        <div className="absolute -top-12 -right-8 w-8 h-8 rounded-2xl bg-[#1c1c1e] border border-white/5 flex items-center justify-center animate-[bounce_3s_infinite]">
+                            <Zap size={12} className="text-white/50" />
+                        </div>
+                        <div className="absolute -bottom-8 -left-12 w-8 h-8 rounded-2xl bg-[#1c1c1e] border border-white/5 flex items-center justify-center animate-[bounce_4s_infinite]">
+                            <Wifi size={12} className="text-white/50" />
+                        </div>
+                        <div className="absolute top-8 left-16 w-8 h-8 rounded-2xl bg-[#1c1c1e] border border-white/5 flex items-center justify-center animate-[bounce_5s_infinite]">
+                            <Lock size={12} className="text-white/50" />
+                        </div>
+                    </div>
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37] font-medium">System Armed</span>
+                </div>
+                </div>
+
+                {/* Scene Selector */}
+                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                {SCENES.map((scene) => (
+                    <button key={scene.id} className="flex items-center gap-3 px-6 py-4 bg-[#1c1c1e] border border-white/5 rounded-[1.5rem] min-w-[160px] hover:bg-[#2c2c2e] hover:border-[#D4AF37]/30 transition-all group">
+                    <scene.icon size={20} className="text-[#86868b] group-hover:text-[#D4AF37]" />
+                    <span className="text-sm font-medium text-white whitespace-nowrap">{scene.label}</span>
+                    </button>
+                ))}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Live Security Feed */}
+                <AppleCard className="md:col-span-2 min-h-[300px] !p-0 relative group overflow-hidden" highlight>
+                    <div className="absolute inset-0 bg-black">
+                        {/* Real Visual: Front Gate / Entry */}
+                        <img 
+                        src="https://images.unsplash.com/photo-1558036117-15d82a90b9b1?auto=format&fit=crop&w=800&q=80" 
+                        alt="Security Feed"
+                        className="absolute inset-0 w-full h-full object-cover opacity-60"
+                        />
+                        {/* Scanlines Effect */}
+                        <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[size:100%_4px] opacity-20 pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 z-10" />
+                    </div>
+                    
+                    <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                        <div className="w-2 h-2 rounded-full bg-[#FF453A] animate-pulse" />
+                        <span className="text-xs font-medium text-white">Live • Front Gate</span>
+                    </div>
+
+                    <div className="absolute bottom-4 left-4 right-4 z-20 flex justify-between items-end">
+                        <div>
+                        <h3 className="text-white font-medium">Sentry Active</h3>
+                        <p className="text-xs text-[#86868b]">No motion detected in last 15m</p>
+                        </div>
+                        <div className="flex gap-2">
+                        <button className="p-3 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition-colors text-white">
+                            <Mic size={18} />
+                        </button>
+                        <button className="p-3 rounded-full bg-[#D4AF37] text-black hover:bg-white transition-colors">
+                            <Unlock size={18} />
+                        </button>
+                        </div>
+                    </div>
+                </AppleCard>
+
+                {/* Quick Climate */}
+                <AppleCard className="flex flex-col justify-between relative overflow-hidden">
+                    {/* Visual: Abstract Climate Background */}
+                    <img 
+                        src="https://images.unsplash.com/photo-1631049552057-403cdb8f0658?auto=format&fit=crop&w=800&q=80" 
+                        className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay"
+                        alt="Air Quality"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#1c1c1e]/80 via-[#1c1c1e]/90 to-[#1c1c1e]" />
+
+                    <div className="flex justify-between items-start relative z-10">
+                        <div className="flex items-center gap-2 text-[#D4AF37]">
+                        <ThermometerSun size={20} />
+                        <span className="text-sm font-medium">Climate</span>
+                        </div>
+                        <span className="text-2xl font-light text-white">22°</span>
+                    </div>
+                    
+                    <div className="space-y-6 relative z-10">
+                        <div className="flex justify-between text-xs text-[#86868b]">
+                        <span>Indoor: 22°C</span>
+                        <span>Humidity: 45%</span>
+                        </div>
+                        <div className="relative h-48 w-full flex items-end gap-1">
+                        {/* Decorative bar chart */}
+                        {[40, 60, 45, 70, 50, 60, 80].map((h, i) => (
+                            <div key={i} className="flex-1 bg-[#2c2c2e] rounded-t-sm relative overflow-hidden group">
+                                <div className="absolute bottom-0 left-0 right-0 bg-[#D4AF37]/50 h-full transition-all group-hover:bg-[#D4AF37]" style={{ height: `${h}%` }} />
+                            </div>
+                        ))}
+                        </div>
+                    </div>
+                </AppleCard>
+
+                {/* Device Grid */}
+                {HUB_DEVICES.map((device) => (
+                    <AppleCard 
+                        key={device.id} 
+                        className={`flex flex-col justify-between transition-all relative overflow-hidden group ${device.active ? 'border-[#D4AF37]/30' : 'opacity-80'}`}
+                        onClick={() => {}}
+                        noPadding
+                    >
+                        {/* Device Background Image */}
+                        <div className="absolute inset-0">
+                        <img 
+                            src={device.image} 
+                            alt={device.name}
+                            className="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
+                        </div>
+
+                        <div className="relative z-10 p-6 flex flex-col h-full justify-between">
+                            <div className="flex justify-between items-start">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors backdrop-blur-md ${device.active ? 'bg-[#D4AF37] text-black' : 'bg-black/40 text-white'}`}>
+                                <device.icon size={20} />
+                            </div>
+                            <div className="w-8 h-5 bg-black/40 backdrop-blur-md rounded-full p-1 cursor-pointer border border-white/10">
+                                <div className={`w-3 h-3 rounded-full transition-all ${device.active ? 'bg-[#30D158] translate-x-3' : 'bg-white/50'}`} />
+                            </div>
+                            </div>
+                            <div>
+                            <h4 className="text-sm font-medium text-white mt-4">{device.name}</h4>
+                            <p className="text-xs text-white/70">{device.status}</p>
+                            </div>
+                        </div>
+                    </AppleCard>
+                ))}
+                </div>
+            </div>
+        );
+
+        const RenovationView = () => (
+            <div className="space-y-6 animate-fadeIn pb-24">
+                <div className="flex items-center justify-between px-2">
+                <div>
+                    <h2 className="text-sm font-medium text-[#D4AF37] uppercase tracking-wider mb-1">Project Status</h2>
+                    <h1 className="text-3xl font-semibold text-white">Renovation 2.0</h1>
+                </div>
+                <button className="bg-[#2c2c2e] p-3 rounded-full text-white hover:bg-[#3a3a3c] border border-white/10 hover:border-[#D4AF37]/50 transition-all">
+                    <Share2 size={20} />
+                </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <AppleCard className="md:col-span-2 min-h-[400px]" highlight>
+                    <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-lg font-semibold text-white">Timeline</h3>
+                    <span className="text-xs font-semibold bg-[#D4AF37] text-black px-3 py-1 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)]">On Track</span>
+                    </div>
+                    
+                    <div className="relative pl-4 space-y-8">
+                        <div className="absolute left-[27px] top-2 bottom-2 w-[2px] bg-[#2c2c2e]" />
+
+                        {[
+                        { label: "Design", date: "Oct 15", status: "Done" },
+                        { label: "Demolition", date: "Nov 01", status: "Done" },
+                        { label: "Construction", date: "In Progress", status: "Active", sub: "Wiring & Structural" },
+                        { label: "Finishing", date: "Est. Dec 10", status: "Pending" },
+                        ].map((step, i) => (
+                        <div key={i} className="relative flex items-start gap-4 z-10">
+                            <div className={`
+                            w-6 h-6 rounded-full border-[3px] flex-shrink-0 bg-[#1c1c1e]
+                            ${step.status === 'Done' ? 'border-[#30D158] bg-[#30D158]' : 
+                                step.status === 'Active' ? 'border-[#D4AF37] shadow-[0_0_0_4px_rgba(212,175,55,0.2)]' : 
+                                'border-[#3a3a3c]'}
+                            `}>
+                            {step.status === 'Done' && <CheckCircle2 size={14} className="text-black mx-auto mt-[1px]" />}
+                            </div>
+                            <div className={`${step.status === 'Pending' ? 'opacity-40' : 'opacity-100'} pt-0.5`}>
+                            <p className="text-sm font-medium text-white">{step.label}</p>
+                            <p className="text-xs text-[#86868b]">{step.date}</p>
+                            {step.sub && <p className="text-sm text-[#D4AF37] mt-1">{step.sub}</p>}
+                            </div>
+                        </div>
+                        ))}
+                    </div>
+                </AppleCard>
+
+                <div className="space-y-4">
+                    <AppleCard>
+                    <h3 className="text-sm font-medium text-[#86868b] mb-1">Budget Used</h3>
+                    <p className="text-3xl font-light text-white">57%</p>
+                    <div className="w-full h-2 bg-[#2c2c2e] rounded-full mt-4 overflow-hidden">
+                        <div className="h-full bg-[#D4AF37] w-[57%] rounded-full shadow-[0_0_15px_rgba(212,175,55,0.5)]" />
+                    </div>
+                    <div className="mt-4 flex justify-between text-xs text-[#86868b]">
+                        <span>Spent: 85.4M</span>
+                        <span>Total: 150M</span>
+                    </div>
+                    </AppleCard>
+                    
+                    <AppleCard className="cursor-pointer hover:bg-[#2c2c2e] transition-colors border border-[#FFD60A]/20">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-[#FFD60A]/20 flex items-center justify-center">
+                        <Bell size={16} className="text-[#FFD60A]" />
+                        </div>
+                        <p className="text-sm font-medium text-white">Action Required</p>
+                    </div>
+                    <p className="text-xs text-[#86868b] leading-relaxed">
+                        Contractor needs approval for tile selection in Master Bath.
+                    </p>
+                    <button className="mt-3 text-xs font-semibold text-black bg-[#D4AF37] px-3 py-2 rounded-lg w-full hover:bg-white transition-colors">Review Options</button>
+                    </AppleCard>
+                </div>
+                </div>
+            </div>
+        );
+
+        const HomeGenieView = () => (
+            <div className="h-full flex flex-col items-center justify-center animate-fadeIn text-center space-y-8 pb-24 min-h-[60vh]">
+                {/* The Illustration */}
+                <div className="relative w-[300px] h-[300px] flex items-center justify-center">
+                {/* Background Breath */}
+                <div className="absolute inset-0 bg-[#D4AF37]/20 blur-[80px] rounded-full animate-pulse" />
+                
+                {/* Rotating Rings */}
+                <svg className="absolute inset-0 w-full h-full animate-[spin_12s_linear_infinite]" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="48" stroke="url(#goldGrad)" strokeWidth="0.5" fill="none" strokeDasharray="4 4" opacity="0.5" />
+                    <circle cx="50" cy="50" r="40" stroke="url(#goldGrad)" strokeWidth="0.5" fill="none" opacity="0.3" />
+                    <defs>
+                        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#D4AF37" />
+                        <stop offset="100%" stopColor="transparent" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                
+                {/* Inner Ring Reverse */}
+                    <svg className="absolute inset-[15%] w-[70%] h-[70%] animate-[spin_15s_linear_infinite_reverse]" viewBox="0 0 100 100">
+                    <path d="M50 10 A40 40 0 0 1 90 50" stroke="#F5F5F7" strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.4" />
+                    <path d="M50 90 A40 40 0 0 1 10 50" stroke="#D4AF37" strokeWidth="1" fill="none" strokeLinecap="round" />
+                </svg>
+
+                {/* Core */}
+                <div className="relative z-10 w-32 h-32 rounded-full bg-gradient-to-br from-[#F5F5F7] via-[#D4AF37] to-[#8a7224] p-[2px] shadow-[0_0_60px_rgba(212,175,55,0.5)]">
+                    <div className="w-full h-full rounded-full bg-[#050505] flex items-center justify-center relative overflow-hidden">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(212,175,55,0.4),transparent)]" />
+                        <Sparkles size={48} className="text-[#D4AF37] relative z-10 animate-pulse" />
+                    </div>
+                </div>
+                
+                {/* Floating Particles */}
+                <div className="absolute top-10 right-20 w-2 h-2 bg-white rounded-full animate-ping" />
+                <div className="absolute bottom-20 left-10 w-1 h-1 bg-[#D4AF37] rounded-full animate-pulse" />
+                </div>
+                
+                <div className="space-y-3 max-w-md mx-auto relative z-10">
+                <h2 className="text-3xl font-serif text-white tracking-tight">HomeGenie Intelligence</h2>
+                <p className="text-[#86868b] text-base leading-relaxed">
+                    "I've analyzed your water usage patterns. Optimizing the filtration system could save <span className="text-[#D4AF37]">15%</span> on your next bill."
+                </p>
+                </div>
+
+                <div className="flex gap-4 relative z-10">
+                <button className="px-8 py-3 rounded-full bg-[#D4AF37] text-black font-semibold text-sm hover:bg-white transition-all shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:scale-105">
+                    Apply Optimization
+                </button>
+                <button className="px-8 py-3 rounded-full bg-[#1c1c1e] text-white font-medium text-sm hover:bg-[#2c2c2e] transition-colors border border-white/10">
+                    View Analysis
+                </button>
+                </div>
+            </div>
+        );
+
+        const HealthView = () => (
+            <div className="space-y-6 animate-fadeIn pb-24">
+                <div className="flex items-center justify-between px-2">
+                    <div>
+                        <h2 className="text-sm font-medium text-[#D4AF37] uppercase tracking-wider mb-1">Digital Twin</h2>
+                        <h1 className="text-3xl font-semibold text-white">System Diagnostics</h1>
+                    </div>
+                    <div className="flex gap-2">
+                        <span className="bg-[#2c2c2e] text-[#86868b] px-3 py-1 rounded-full text-xs font-medium border border-white/5">Last Scan: 10m ago</span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <AppleCard className="md:col-span-2">
+                        <h3 className="text-lg font-semibold text-white mb-6">Core Systems Health</h3>
+                        <div className="grid grid-cols-3 gap-8">
+                            {SYSTEM_STATUS.map((sys) => (
+                                <div key={sys.id} className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-[#2c2c2e]/30 border border-white/5">
+                                    <div className="relative w-20 h-20 flex items-center justify-center">
+                                        <svg className="w-full h-full transform -rotate-90">
+                                            <circle cx="40" cy="40" r="36" stroke="#2c2c2e" strokeWidth="6" fill="transparent" />
+                                            <circle cx="40" cy="40" r="36" stroke={sys.status === 'Optimal' ? THEME.accent : THEME.success} strokeWidth="6" fill="transparent" strokeDasharray="226" strokeDashoffset={sys.status === 'Optimal' ? 0 : 40} />
+                                        </svg>
+                                        <span className="absolute text-sm font-bold text-white">{sys.status === 'Optimal' ? '100' : '94'}%</span>
+                                    </div>
+                                    <span className="text-sm font-medium text-white">{sys.name}</span>
+                                    <div className="flex gap-2 text-[10px] text-[#86868b]">
+                                        <span>{sys.temp}</span>
+                                        <span>•</span>
+                                        <span>{sys.load} Load</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </AppleCard>
+
+                    <AppleCard className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-full bg-[#30D158]/20 flex items-center justify-center text-[#30D158]">
+                                <Wifi size={24} />
+                            </div>
+                            <div>
+                                <h4 className="text-white font-medium">Mesh Network</h4>
+                                <p className="text-xs text-[#86868b]">Main Node • 1.2 Gbps</p>
+                            </div>
+                        </div>
+                        <div className="w-3 h-3 rounded-full bg-[#30D158] shadow-[0_0_10px_#30D158]" />
+                    </AppleCard>
+
+                    <AppleCard className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-full bg-[#FFD60A]/20 flex items-center justify-center text-[#FFD60A]">
+                                <Cpu size={24} />
+                            </div>
+                            <div>
+                                <h4 className="text-white font-medium">Neural Processor</h4>
+                                <p className="text-xs text-[#86868b]">Active Learning</p>
+                            </div>
+                        </div>
+                        <div className="w-3 h-3 rounded-full bg-[#FFD60A] animate-pulse" />
+                    </AppleCard>
+                </div>
+            </div>
+        );
+
+        const SettingsView = () => (
+            <div className="space-y-6 animate-fadeIn pb-24 max-w-2xl mx-auto">
+                <div className="text-center mb-8">
+                    <div className="w-24 h-24 rounded-full bg-[#2c2c2e] border-2 border-[#D4AF37] mx-auto mb-4 flex items-center justify-center text-2xl font-bold text-[#D4AF37]">JP</div>
+                    <h1 className="text-2xl font-semibold text-white">Josephine Petra</h1>
+                    <p className="text-[#86868b]">Residence 4B • Owner</p>
+                </div>
+
+                <div className="space-y-4">
+                    <AppleCard noPadding className="flex flex-col">
+                        {[
+                            { icon: User, label: "Personal Information" },
+                            { icon: Lock, label: "Security & Privacy" },
+                            { icon: Share2, label: "Family Sharing" }
+                        ].map((item, i) => (
+                            <div key={i} className="flex items-center justify-between p-4 border-b border-white/5 last:border-0 hover:bg-[#2c2c2e] cursor-pointer transition-colors">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-8 h-8 rounded-lg bg-[#D4AF37] flex items-center justify-center text-black">
+                                        <item.icon size={16} />
+                                    </div>
+                                    <span className="text-sm font-medium text-white">{item.label}</span>
+                                </div>
+                                <ChevronRight size={16} className="text-[#86868b]" />
+                            </div>
+                        ))}
+                    </AppleCard>
+
+                    <AppleCard noPadding className="flex flex-col">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-8 h-8 rounded-lg bg-[#30D158] flex items-center justify-center text-white">
+                                        <Bell size={16} />
+                                    </div>
+                                    <span className="text-sm font-medium text-white">Notifications</span>
+                                </div>
+                                <ToggleRight size={24} className="text-[#30D158]" />
+                        </div>
+                        <div className="flex items-center justify-between p-4 border-b border-white/5">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-8 h-8 rounded-lg bg-[#0A84FF] flex items-center justify-center text-white">
+                                        <Eye size={16} />
+                                    </div>
+                                    <span className="text-sm font-medium text-white">Face ID Access</span>
+                                </div>
+                                <ToggleRight size={24} className="text-[#30D158]" />
+                        </div>
+                    </AppleCard>
+
+                    <button className="w-full p-4 rounded-xl bg-[#2c2c2e] text-[#FF453A] text-sm font-medium hover:bg-[#3a3a3c] transition-colors flex items-center justify-center gap-2">
+                        <LogOut size={16} /> Sign Out
+                    </button>
+                </div>
+            </div>
+        );
+
+        // --- Layout ---
+
+        export default function App() {
+            const [activeTab, setActiveTab] = useState('home');
+            const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+            const TABS = [
+                { id: 'home', icon: Home, label: 'Home' },
+                { id: 'hub', icon: LayoutGrid, label: 'Hub' },
+                { id: 'renovation', icon: Hammer, label: 'Projects' },
+                { id: 'genie', icon: Sparkles, label: 'Genie' },
+                { id: 'health', icon: Heart, label: 'Health' },
+                { id: 'settings', icon: Settings, label: 'Settings' },
+            ];
+
+            return (
+                <div className={`min-h-screen ${THEME.bg} font-sans selection:bg-[#D4AF37] selection:text-black`}>
+                    {/* Dynamic Background Mesh */}
+                    <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                        <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-[#D4AF37]/5 rounded-full blur-[120px]" />
+                        <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-[#30D158]/5 rounded-full blur-[100px]" />
+                    </div>
+
+                    {/* Main Content */}
+                    <main className="relative z-10 max-w-5xl mx-auto px-4 pt-8 md:pt-12 min-h-screen flex flex-col">
+                        {/* Mobile Header */}
+                        <div className="md:hidden flex justify-between items-center mb-8">
+                        <span className="text-xl font-bold text-white tracking-tight">SECHA</span>
+                        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-white">
+                            {isMenuOpen ? <X /> : <Menu />}
+                        </button>
+                        </div>
+
+                        <div className="flex-1">
+                        {activeTab === 'home' && <HomeView />}
+                        {activeTab === 'hub' && <HubView />}
+                        {activeTab === 'renovation' && <RenovationView />}
+                        {activeTab === 'genie' && <HomeGenieView />}
+                        {activeTab === 'health' && <HealthView />}
+                        {activeTab === 'settings' && <SettingsView />}
+                        </div>
+
+                        {/* Floating Dock Navigation (Apple Style) */}
+                        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
+                        <nav className="bg-[#1c1c1e]/80 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl px-2 py-2 flex justify-between items-center">
+                            {TABS.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`
+                                relative p-3 rounded-full transition-all duration-300 group
+                                ${activeTab === tab.id ? 'bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/30' : 'text-[#86868b] hover:text-white hover:bg-[#2c2c2e]'}
+                                `}
+                            >
+                                <tab.icon size={24} strokeWidth={2} className={`transition-transform duration-300 ${activeTab === tab.id ? 'scale-100' : 'group-hover:scale-110'}`} />
+                                {activeTab === tab.id && (
+                                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-[10px] font-medium text-[#86868b] bg-[#1c1c1e] px-2 py-0.5 rounded-md border border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {tab.label}
+                                </span>
+                                )}
+                            </button>
+                            ))}
+                        </nav>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
